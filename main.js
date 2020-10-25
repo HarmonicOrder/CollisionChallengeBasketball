@@ -57,11 +57,11 @@
         document.body.appendChild(n);
         return n;
     }
+
+    // `beep` was taken from Stack Overflow since it's more of a library reference on AudioContext
     //if you have another AudioContext class use that one, as some browsers have a limit
     var audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
-
     //All arguments are optional:
-
     //duration of the tone in milliseconds. Default is 500
     //frequency of the tone in hertz. default is 440
     //volume of the tone. Default is 1, off is 0.
@@ -113,6 +113,7 @@
         y <= rectY + rectH && 
         x <= rectX + rectW;
     }
+    //unused, and currently wrong, couldn't figure it out fast enough
     function rect_inside_rect(x, y, w, h, rectX, rectY, rectW, rectH){
         var offX = x - rectX;
         var offY = y - rectY;
@@ -120,22 +121,43 @@
             (x >= rectX && x <= rectX+rectW && y+h >= rectY && y+h <= rectY+rectH)    
         );
     }
+    /**
+     * distance theorem from point a x,y to point b x,y 
+     * @param {*} x 
+     * @param {*} y 
+     * @param {*} bX 
+     * @param {*} bY 
+     */
     function distance(x, y, bX, bY){
         return (Math.sqrt(
             Math.pow(x - bX, 2) +
             Math.pow(y - bY, 2)
         ));
     }
+    /**
+     * returns true if x/y hits any point within min/max X/Y
+     * 
+     * note: this actually models a cylindrical rim, not a square
+     * @param {*} x 
+     * @param {*} y 
+     * @param {*} minX 
+     * @param {*} maxX 
+     * @param {*} minY 
+     * @param {*} maxY 
+     */
     function intersection(x, y, minX, maxX, minY, maxY){
+        //find the closest point on the rim by "clamping"
         var rimX = Math.min(maxX, Math.max(minX, x));
         var rimY = Math.min(maxY, Math.max(minY, y));
+        //then return distance < ballR
         return distance(x, y, rimX, rimY) <= ballR;
     }
     function collideWithRim(ballX, ballY, rimX, rimY, rimW, rimH){
         return (
+            //an "optimization" would be to check rect_inside_rect(ballX, ballY, ball_h, ball_h, rimX, rimY, rimW, rimH) BEFORE
+            //calling the distance code, since distance code is "expensive"
+            //but in the interest of time, we'll just run distance each time
             intersection(ballX+ballR, ballY+ballR, rimX, rimX+rimW, rimY, rimY+rimH)
-//            rect_inside_rect(ballX, ballY, ball_h, ball_h, rimX, rimY, rimW, rimH)
-//            distance(ballX+ballR, ballY+ballR, rimX, rimY) <= ballR
         )
     }
     function checkRimCollisions(ballX, ballY, vel_x, vel_y, allowRecurse) {
@@ -153,7 +175,7 @@
         if (collideWithRim(ballX + vel_x, ballY - vel_y, rim_front_x, rim_front_y, rim_w, rim_front_h) ||
             collideWithRim(ballX + vel_x, ballY - vel_y, rim_back_x, rim_back_y, rim_w, rim_back_h)
         ){
-            beep(100, 80+(Math.random()*5)*5, 0.2, 'square')
+            beep(100, 80+(Math.random()*5)*5, 0.2, 'square');// collision sfx
             vel_x *= -1;
             vel_y *= -1;
         }
@@ -168,7 +190,8 @@
         // goal_w, goal_h
         // goal_x, goal_y
 
-        return point_inside_rect(ballX + ballR, ballY + ballR, goal_x, goal_y, goal_w, goal_h);
+        //checks that the top-center of the ball is in the goal
+        return point_inside_rect(ballX + ballR, ballY + ballR*2, goal_x, goal_y, goal_w, goal_h);
     }
     var scored = {};
     var scoreboard = document.getElementsByClassName('scoreboard')[0];

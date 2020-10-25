@@ -62,7 +62,8 @@ span{
     position: absolute;
     right: -163px;
     top: 60px;
-    z-index: 22;    
+    z-index: 22;
+    pointer-events: none;
 }
 .juice{
     opacity: 0;
@@ -72,6 +73,7 @@ span{
     position: absolute;
     left: calc(50% - 200px);
     text-align: center;
+    font-weight: bold;
 }
 .juice.active{
     opacity: 1;
