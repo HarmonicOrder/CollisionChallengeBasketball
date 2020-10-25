@@ -196,6 +196,7 @@
     var scored = {};
     var scoreboard = document.getElementsByClassName('scoreboard')[0];
     var juice = document.getElementsByClassName('juice')[0];
+    var crowd = document.getElementsByClassName('crowd')[0];
     var juiceTimeout = null;
     var phrases = ["SCORE!", "SWISH!", "YOU ROCK!", "2 POINTS!", "BOOM GOES THE DYNAMITE","DOWNTOWN!", "ALLEY OOP!"]
     function onGoal(ballNumber) {
@@ -204,10 +205,12 @@
             scoreboard.innerText = Object.keys(scored).length * 2;
             juice.children[0].innerText = phrases[Math.floor(Math.random()*phrases.length)];
             juice.classList.add('active');
+            crowd.classList.add('active');
             if (juiceTimeout)
                 window.clearTimeout(juiceTimeout);
             juiceTimeout = setTimeout(function(){
                 juice.classList.remove('active');
+                crowd.classList.remove('active');
             }, 3000);
             
             beep(200, 600, 0.3, null, function(){
