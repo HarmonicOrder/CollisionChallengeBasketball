@@ -56,12 +56,59 @@ span{
     height: 200px;
     width: 10px;
 }
+.slingshot:before{
+    content: url('shooter.png');
+    transform: scaleX(-1) scale(1.5);
+    position: absolute;
+    right: -163px;
+    top: 60px;
+    z-index: 22;    
+}
 .juice{
     opacity: 0;
     width: 400px;
     font-size: 40px;
     transition: opacity .5s;
+    position: absolute;
+    left: calc(50% - 200px);
+    text-align: center;
 }
 .juice.active{
     opacity: 1;
+    animation: dance 1000ms linear infinite;
+}
+.scoreboard{
+    font-family: monospace;
+    border: 1px solid red;
+    background: black;
+    padding: 6px;
+    font-size: 30px;
+    color: red;
+    display: inline-block;
+    user-select: none; 
+    position: absolute;
+    top: 30px;
+    left: 20px;
+}
+.scoreboard:before{
+    content: "SCORE:";
+    user-select: none;  
+}
+
+@keyframes dance{
+    0% {
+        transform: rotate(0) scale(1)
+    }
+    30% {
+        transform: rotate(20deg) scale(2)
+    }
+    50% {
+        transform: rotate(0) scale (.77)
+    }
+    70% {
+        transform: rotate(-20deg) scale(2)
+    }
+    100% {
+        transform: rotate(0) scale(1)
+    }
 }

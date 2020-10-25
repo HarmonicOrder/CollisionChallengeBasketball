@@ -57,6 +57,31 @@
         document.body.appendChild(n);
         return n;
     }
+    //if you have another AudioContext class use that one, as some browsers have a limit
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+
+    //All arguments are optional:
+
+    //duration of the tone in milliseconds. Default is 500
+    //frequency of the tone in hertz. default is 440
+    //volume of the tone. Default is 1, off is 0.
+    //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+    //callback to use on end of tone
+    function beep(duration, frequency, volume, type, callback) {
+        var oscillator = audioCtx.createOscillator();
+        var gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (volume){gainNode.gain.value = volume;}
+        if (frequency){oscillator.frequency.value = frequency;}
+        if (type){oscillator.type = type;}
+        if (callback){oscillator.onended = callback;}
+
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + ((duration || 500) / 1000));
+    };
     function checkFloorAndWalls(x, y, vel_x, vel_y, dt) {
         if (y <= 0) {
             if (vel_y > bounce_damp / 2)
@@ -128,6 +153,7 @@
         if (collideWithRim(ballX + vel_x, ballY - vel_y, rim_front_x, rim_front_y, rim_w, rim_front_h) ||
             collideWithRim(ballX + vel_x, ballY - vel_y, rim_back_x, rim_back_y, rim_w, rim_back_h)
         ){
+            beep(100, 80+(Math.random()*5)*5, 0.2, 'square')
             vel_x *= -1;
             vel_y *= -1;
         }
@@ -148,16 +174,30 @@
     var scoreboard = document.getElementsByClassName('scoreboard')[0];
     var juice = document.getElementsByClassName('juice')[0];
     var juiceTimeout = null;
+    var phrases = ["SCORE!", "SWISH!", "YOU ROCK!", "2 POINTS!", "BOOM GOES THE DYNAMITE","DOWNTOWN!", "ALLEY OOP!"]
     function onGoal(ballNumber) {
         if (!scored[ballNumber]){
             scored[ballNumber] = true;
             scoreboard.innerText = Object.keys(scored).length * 2;
+            juice.children[0].innerText = phrases[Math.floor(Math.random()*phrases.length)];
             juice.classList.add('active');
             if (juiceTimeout)
                 window.clearTimeout(juiceTimeout);
             juiceTimeout = setTimeout(function(){
                 juice.classList.remove('active');
             }, 3000);
+            
+            beep(200, 600, 0.3, null, function(){
+                beep(200, 700, 0.3, null, function(){
+                    beep(200, 800, 0.3, null, function(){
+                        beep(400, 900, 0.3, null, function(){
+                            beep(120, 800, 0.3, null, function(){
+                                beep(1000, 900, 0.3)
+                            })
+                        })
+                    })
+                })
+            });
         }
     }
     function loop(time) {
