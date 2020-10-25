@@ -7,7 +7,20 @@ body{
     border-bottom:40px solid grey;
     overflow: hidden;
 }
-
+.crowd{
+    background: url('crowd.jpg');
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    opacity: .3;
+    top: 0;
+    position: fixed;
+    left: 0;
+    background-size: contain;
+    z-index: -2;
+    filter: sepia(.8);
+}
 .ball{
     border-radius: 50px;
     height: 79px;
@@ -37,7 +50,7 @@ span{
     position: absolute;
     width: 100%;
     height: 40px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgb(220, 220, 220);
     bottom: -30px;
 }
 .backboard{
