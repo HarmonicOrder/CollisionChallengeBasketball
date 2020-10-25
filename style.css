@@ -18,6 +18,9 @@ body{
     font-size: 11px;
     text-align: center;
 }
+.ball.collide{
+    background: red;
+}
 span{
     user-select: none;  
 }
@@ -52,4 +55,13 @@ span{
     bottom: 0px;
     height: 200px;
     width: 10px;
+}
+.juice{
+    opacity: 0;
+    width: 400px;
+    font-size: 40px;
+    transition: opacity .5s;
+}
+.juice.active{
+    opacity: 1;
 }

@@ -5,6 +5,7 @@
     var roll_damp = 1 - 0.02;
     var air_damp = 1 - 0.000;
     var ball_w = 80; var ball_h = ball_w;
+    const ballR = ball_w/2;
 
     var goal_w = 150;
     var goal_h = 50;
@@ -81,7 +82,38 @@
             vel_y: vel_y
         }
     }
-    function checkRimCollisions(ballX, ballY, vel_x, vel_y) {
+    function point_inside_rect(x, y, rectX, rectY, rectW, rectH){
+        return x >= rectX &&
+        y >= rectY &&
+        y <= rectY + rectH && 
+        x <= rectX + rectW;
+    }
+    function rect_inside_rect(x, y, w, h, rectX, rectY, rectW, rectH){
+        var offX = x - rectX;
+        var offY = y - rectY;
+        return (
+            (x >= rectX && x <= rectX+rectW && y+h >= rectY && y+h <= rectY+rectH)    
+        );
+    }
+    function distance(x, y, bX, bY){
+        return (Math.sqrt(
+            Math.pow(x - bX, 2) +
+            Math.pow(y - bY, 2)
+        ));
+    }
+    function intersection(x, y, minX, maxX, minY, maxY){
+        var rimX = Math.min(maxX, Math.max(minX, x));
+        var rimY = Math.min(maxY, Math.max(minY, y));
+        return distance(x, y, rimX, rimY) <= ballR;
+    }
+    function collideWithRim(ballX, ballY, rimX, rimY, rimW, rimH){
+        return (
+            intersection(ballX+ballR, ballY+ballR, rimX, rimX+rimW, rimY, rimY+rimH)
+//            rect_inside_rect(ballX, ballY, ball_h, ball_h, rimX, rimY, rimW, rimH)
+//            distance(ballX+ballR, ballY+ballR, rimX, rimY) <= ballR
+        )
+    }
+    function checkRimCollisions(ballX, ballY, vel_x, vel_y, allowRecurse) {
         //available dimensions:
         // ball_w, ball_h
         // rim_w
@@ -91,9 +123,14 @@
         // ball has a radius of ball_w/2
         // ballX and ballY are the bottom-left corner of the ball
         // ballX and ballY are the PAST version of the ball
-        // vel_x and vel_y will be ADDED to ballX and ballY after this function
+        // vel_x will be ADDED to ballX and and vel_y will be SUBTRACTED to ballY after this function
 
-        //TODO: change vel_x and vel_y to "bounce" off of rim and backboard
+        if (collideWithRim(ballX + vel_x, ballY - vel_y, rim_front_x, rim_front_y, rim_w, rim_front_h) ||
+            collideWithRim(ballX + vel_x, ballY - vel_y, rim_back_x, rim_back_y, rim_w, rim_back_h)
+        ){
+            vel_x *= -1;
+            vel_y *= -1;
+        }
 
         return {
             vel_x: vel_x,
@@ -105,12 +142,23 @@
         // goal_w, goal_h
         // goal_x, goal_y
 
-        //TODO: return TRUE when ball is in goal
-
-        return false;
+        return point_inside_rect(ballX + ballR, ballY + ballR, goal_x, goal_y, goal_w, goal_h);
     }
+    var scored = {};
+    var scoreboard = document.getElementsByClassName('scoreboard')[0];
+    var juice = document.getElementsByClassName('juice')[0];
+    var juiceTimeout = null;
     function onGoal(ballNumber) {
-        //TODO: show a visual indicator the user scored
+        if (!scored[ballNumber]){
+            scored[ballNumber] = true;
+            scoreboard.innerText = Object.keys(scored).length * 2;
+            juice.classList.add('active');
+            if (juiceTimeout)
+                window.clearTimeout(juiceTimeout);
+            juiceTimeout = setTimeout(function(){
+                juice.classList.remove('active');
+            }, 3000);
+        }
     }
     function loop(time) {
         // Compute the delta-time against the previous time
@@ -167,13 +215,26 @@
         previousTime = time;
         window.requestAnimationFrame(loop);
     });
-    var sling_ball = null;
+    var sling_ball = null; var move_ball = null; var move_start = {};
     var sling_start_x = 0; var sling_start_y = 0;
 
     document.addEventListener('mousedown', function (e) {
-        sling_ball = addBall(165, 170);
-        sling_ball.dataset['physics'] = false;
-        sling_start_x = e.pageX; sling_start_y = e.pageY;
+        if (e.button == 0){
+            sling_ball = addBall(165, 170);
+            sling_ball.dataset['physics'] = false;
+            sling_start_x = e.pageX; sling_start_y = e.pageY;
+        }
+        if (e.button == 1){
+            var balls = document.getElementsByClassName('ball');
+            for (var i = 0; i < balls.length; i++) {
+                var ball = balls[i];
+                if (point_inside_rect(e.pageX, document.body.clientHeight- e.pageY, +ball.dataset.x, +ball.dataset.y, ball_h, ball_h)){
+                    move_ball = ball;
+                    ball.dataset.physics = 'false';
+                    break;
+                }
+            }
+        }
     });
     var drag_scale = 7; //for every 7px, add 1 force
     var max_sling_f = 30; // max sling force
@@ -191,10 +252,24 @@
             sling_ball.dataset['vx'] = x;
             sling_ball.dataset['vy'] = y;
             sling_ball.children[0].innerText = x.toFixed(2) + ',' + y.toFixed(2);
+        } else if (move_ball){
+            var x = e.pageX;
+            var y = document.body.clientHeight-e.pageY;
+            move_ball.style.left = x;
+            move_ball.style.bottom = y;
+            move_ball.dataset.x = x;
+            move_ball.dataset.y = y;
+            move_ball.classList.toggle('collide', checkRimCollisions(x, y, 1, 1).vel_x == -1);
         }
     });
-    document.addEventListener('mouseup', function () {
-        sling_ball.dataset['physics'] = true;
-        sling_ball = null;
+    document.addEventListener('mouseup', function (e) {
+        if (e.button == 0){
+            sling_ball.dataset['physics'] = true;
+            sling_ball = null;
+        }
+        if (e.button == 1 && move_ball){
+            move_ball.dataset.physics = true;
+            move_ball = null;
+        }
     });
 })();
